@@ -1,0 +1,5 @@
+python-dotenv[all]
+requests[all]
+icalendar[all]
+fastapi[all]
+
