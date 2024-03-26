@@ -28,16 +28,18 @@ async def get_events(max_results: Optional[int] = 10):
         # Parse the calendar data
         calendar = Calendar.from_ical(response.text)
 
-        dataString = ""
-        for event in calendar.walk('vevent')[:10]:
+        extracted_events = []
+        for event in calendar.walk('vevent')[:max_results]:
             summary = event.get('summary')
             start_time = event.get('dtstart').dt.strftime('%Y-%m-%d %H:%M:%S')
-            dataString += str({
-                'summary': summary,
-                'start_time': start_time
-            }) + "|"
+            end_time = event.get('dtend').dt.strftime('%Y-%m-%d %H:%M:%S')
+            extracted_events.append({
+                'summary': str(summary),
+                'start_time': str(start_time),
+                'end_time': str(end_time)
+            })
 
-        return dataString
+        return extracted_events
 
         # Extract necessary information from events
         # extracted_events = []
