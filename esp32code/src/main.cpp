@@ -55,38 +55,41 @@ void printLocalTime() {
     return;
   }
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  Serial.println(timeinfo.tm_hour);
   rtc.setTimeStruct(timeinfo);
   Serial.println(rtc.getTimeDate());
 }
 
-void fetchFromServer(void *pvParameter) {
-  while(1) {
-    if(WiFi.status()== WL_CONNECTED) {
+void fetchDataFromServer() {
+  if(WiFi.status()== WL_CONNECTED) {
     
-      // Send HTTP GET request
-      int httpResponseCode = http.GET();
-      
-      if (httpResponseCode > 0) {
-        Serial.print("HTTP Response code: ");
-        Serial.println(httpResponseCode);
-        String payload = http.getString();
-        Serial.println(payload);
+    // Send HTTP GET request
+    int httpResponseCode = http.GET();
+    
+    if (httpResponseCode > 0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+      String payload = http.getString();
+      Serial.println(payload);
 
-        deserializeJson(doc, payload);
-        gCalData = doc.as<JsonArray>();
-        gCalSize = gCalData.size();
-      }
-      else {
-        Serial.print("Error code: ");
-        Serial.println(httpResponseCode);
-      }
-      // Free resources
-      http.end();
+      deserializeJson(doc, payload);
+      gCalData = doc.as<JsonArray>();
+      gCalSize = gCalData.size();
     }
     else {
-      Serial.println("WiFi Disconnected");
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
     }
+    // Free resources
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+}
+
+void fetchFromServer(void *pvParameter) {
+  while(1) {
+    fetchDataFromServer();
     vTaskDelay(10000 / portTICK_PERIOD_MS);
   }
 }
@@ -94,29 +97,45 @@ void fetchFromServer(void *pvParameter) {
 void setup() {
   Serial.begin(115200);
 
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting");
-  while(WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to WiFi network with IP Address: ");
-  Serial.println(WiFi.localIP());
-
-  //get time from server
-  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  printLocalTime();
-
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { 
     Serial.println(F("SSD1306 allocation failed"));
     for(;;); // Don't proceed, loop forever
   }
 
+  WiFi.begin(ssid, password);
+  while(WiFi.status() != WL_CONNECTED) {
+    display.clearDisplay();
+    display.setTextSize(1);             // Normal 1:1 pixel scale
+    display.setTextColor(WHITE);        // Draw white text
+    display.setCursor(0, 0);            // Start at top-left corner
+    display.println("Connecting...");
+    display.display();
+    delay(500);
+    //Serial.print(".");
+  }
+  // Serial.println("");
+  // Serial.print("Connected to WiFi network with IP Address: ");
+  // Serial.println(WiFi.localIP());
+  display.clearDisplay();
+  display.setTextSize(1);             // Normal 1:1 pixel scale
+  display.setTextColor(WHITE);        // Draw white text
+  display.setCursor(0, 0);            // Start at top-left corner
+  display.println("Connected");
+  display.println(WiFi.localIP());
+  display.display();
+  delay(1000);
+
+  //get time from server
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  printLocalTime();
+
+  
+
   // Your Domain name with URL path or IP address with path
   http.begin(serverName.c_str());
 
+  fetchDataFromServer();
   xTaskCreate(fetchFromServer, "Fetch From Server", 10000, NULL, 1, NULL);
 }
 
@@ -124,6 +143,7 @@ void setup() {
 void loop() {
   uint32_t currentTotal = rtc.getSecond() + rtc.getMinute()*60 + rtc.getHour(true)*3600;
   String currentTask = "Nothing Scheduled";
+  String taskStart, taskEnd;
   uint8_t nextTaskIndex = 1;
   for(uint8_t x = 0; x < gCalSize; x++) {
     int startYear, startMonth, startDay, startHour, startMinute, startSecond;
@@ -138,12 +158,14 @@ void loop() {
     uint32_t startTotal = startSecond + startMinute*60 + startHour*3600;
     uint32_t endTotal = endSecond + endMinute*60 + endHour*3600;
 
-    if(currentTotal < startTotal) {
+    if(currentTotal > startTotal) {
       nextTaskIndex++;
     }
 
     if(currentTotal > startTotal && currentTotal < endTotal) {
-      currentTask = gCalData[x]["summary"].as<String>(); 
+      currentTask = gCalData[x]["summary"].as<String>();
+      taskStart = gCalData[x]["start_time"].as<String>().substring(11, 17);
+      taskEnd = gCalData[x]["end_time"].as<String>().substring(11, 17);
       break;
     }
   }
@@ -152,12 +174,17 @@ void loop() {
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(WHITE);        // Draw white text
   display.setCursor(0, 0);            // Start at top-left corner
-  display.println(rtc.getTime());
-  display.setCursor(0, 10);
-  display.println(currentTask);
-  display.setCursor(0,30);   
-  display.println("Next Task:");
-  display.setCursor(0, 40);     
+  display.println("------" + rtc.getTime() + "-------");
+  display.println();
+  display.println("> " + currentTask);
+  if(currentTask.equals("Nothing Scheduled")) {
+    display.println();
+  } else {
+    display.println("  " + taskStart + " to " + taskEnd);
+  }
+  display.println();
+  display.println();
   display.println(gCalData[nextTaskIndex]["summary"].as<String>());
+  display.println(gCalData[nextTaskIndex]["start_time"].as<String>().substring(11, 17) + " to " + gCalData[nextTaskIndex]["end_time"].as<String>().substring(11, 17));
   display.display();
 }
