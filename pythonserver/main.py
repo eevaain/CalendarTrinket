@@ -10,13 +10,23 @@ from fastapi.responses import JSONResponse
 import uvicorn
 import os
 from dotenv import load_dotenv 
+import json
 
 # loading variables from .env file
 load_dotenv() 
 
+# CAL_KEY = os.getenv("CAL_KEY")
+# cal_key_json = json.loads(CAL_KEY)
+
+# f = open('pythonserver/calendarKey.json')
+# print(type(f))
+
 # Set up credentials
 credentials = service_account.Credentials.from_service_account_file(
-    '../etc/secrets/calendarKey.json', scopes=['https://www.googleapis.com/auth/calendar.readonly'])
+    "/etc/secrets/calendarKey.json", scopes=['https://www.googleapis.com/auth/calendar.readonly'])
+
+
+# print(cal_key_json)
 
 # Create the Google Calendar API service
 service = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
