@@ -25,13 +25,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include <HTTPClient.h>
 HTTPClient http;
 
-// const char* ssid = "MERCKU-0640";
-// const char* password = "CP2146HD50H";
-const char* ssid = "XC-iPH12m";
-const char* password = "freewifi";
+const char* ssid = "MERCKU-0640";
+const char* password = "CP2146HD50H";
+// const char* ssid = "XC-iPH12m";
+// const char* password = "freewifi";
 
 //Your Domain name with URL path or IP address with path
-String serverName = "https://calendertrinket.onrender.com/events";
+String serverName = "https://calendertrinket.onrender.com/calendars";
 
 #define TIME_DELAY 10000
 unsigned long lastTime = 0;
@@ -114,9 +114,6 @@ void setup() {
     delay(500);
     //Serial.print(".");
   }
-  // Serial.println("");
-  // Serial.print("Connected to WiFi network with IP Address: ");
-  // Serial.println(WiFi.localIP());
   display.clearDisplay();
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(WHITE);        // Draw white text
@@ -124,13 +121,10 @@ void setup() {
   display.println("Connected");
   display.println(WiFi.localIP());
   display.display();
-  delay(1000);
 
   //get time from server
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   printLocalTime();
-
-  
 
   // Your Domain name with URL path or IP address with path
   http.begin(serverName.c_str());
@@ -144,28 +138,27 @@ void loop() {
   uint32_t currentTotal = rtc.getSecond() + rtc.getMinute()*60 + rtc.getHour(true)*3600;
   String currentTask = "Nothing Scheduled";
   String taskStart, taskEnd;
-  uint8_t nextTaskIndex = 1;
+  uint8_t nextTaskIndex = 0;
   for(uint8_t x = 0; x < gCalSize; x++) {
-    int startYear, startMonth, startDay, startHour, startMinute, startSecond;
-    int endYear, endMonth, endDay, endHour, endMinute, endSecond;
+    int startHour, startMinute, startSecond;
+    int endHour, endMinute, endSecond;
 
     // String start = gCalData[x]["start_time"];
     // String end = gCalData[x]["end_time"];
     
     // Parse the string (I should probably parse this when the data is fetched not in the main loop)
-    sscanf(gCalData[x]["start_time"].as<String>().c_str(), "%d-%d-%d %d:%d:%d", &startYear, &startMonth, &startDay, &startHour, &startMinute, &startSecond);
-    sscanf(gCalData[x]["end_time"].as<String>().c_str(), "%d-%d-%d %d:%d:%d", &endYear, &endMonth, &endDay, &endHour, &endMinute, &endSecond);
+    sscanf(gCalData[x]["start"].as<String>().c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
+    sscanf(gCalData[x]["end"].as<String>().c_str(), "%d:%d:%d", &endHour, &endMinute, &endSecond);
     uint32_t startTotal = startSecond + startMinute*60 + startHour*3600;
     uint32_t endTotal = endSecond + endMinute*60 + endHour*3600;
-
     if(currentTotal > startTotal) {
       nextTaskIndex++;
     }
 
     if(currentTotal > startTotal && currentTotal < endTotal) {
       currentTask = gCalData[x]["summary"].as<String>();
-      taskStart = gCalData[x]["start_time"].as<String>().substring(11, 17);
-      taskEnd = gCalData[x]["end_time"].as<String>().substring(11, 17);
+      taskStart = gCalData[x]["start"].as<String>().substring(0, 5);
+      taskEnd = gCalData[x]["end"].as<String>().substring(0, 5);
       break;
     }
   }
@@ -185,6 +178,6 @@ void loop() {
   display.println();
   display.println();
   display.println(gCalData[nextTaskIndex]["summary"].as<String>());
-  display.println(gCalData[nextTaskIndex]["start_time"].as<String>().substring(11, 17) + " to " + gCalData[nextTaskIndex]["end_time"].as<String>().substring(11, 17));
+  display.println(gCalData[nextTaskIndex]["start"].as<String>().substring(0, 5) + " to " + gCalData[nextTaskIndex]["end"].as<String>().substring(0, 5));
   display.display();
 }
