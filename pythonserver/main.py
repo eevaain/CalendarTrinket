@@ -5,11 +5,9 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 import datetime
-from typing import Optional
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 import uvicorn
-from googleapiclient.discovery import build
 import os
 from dotenv import load_dotenv 
 
