@@ -2,4 +2,6 @@ python-dotenv[all]
 requests[all]
 icalendar[all]
 fastapi[all]
-
+google-auth[all]
+google-api-python-client[all]
+uvicorn[all]
