@@ -55,7 +55,6 @@ void printLocalTime() {
     return;
   }
   Serial.println(&timeinfo, "%A, %B %d %Y %H:%M:%S");
-  Serial.println(timeinfo.tm_hour);
   rtc.setTimeStruct(timeinfo);
   Serial.println(rtc.getTimeDate());
 }
