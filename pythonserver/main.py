@@ -23,7 +23,7 @@ load_dotenv()
 
 # Set up credentials
 credentials = service_account.Credentials.from_service_account_file(
-    "etc/secrets/calendarKey.json", scopes=['https://www.googleapis.com/auth/calendar.readonly'])
+    "/etc/secrets/calendarKey.json", scopes=['https://www.googleapis.com/auth/calendar.readonly'])
 
 
 # print(cal_key_json)
