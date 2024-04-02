@@ -16,7 +16,7 @@ load_dotenv()
 
 # Set up credentials
 credentials = service_account.Credentials.from_service_account_file(
-    'pythonserver/calendarKey.json', scopes=['https://www.googleapis.com/auth/calendar.readonly'])
+    '/etc/secrets/calendarKey.json', scopes=['https://www.googleapis.com/auth/calendar.readonly'])
 
 # Create the Google Calendar API service
 service = googleapiclient.discovery.build('calendar', 'v3', credentials=credentials)
