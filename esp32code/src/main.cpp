@@ -25,10 +25,8 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include <HTTPClient.h>
 HTTPClient http;
 
-const char* ssid = "MERCKU-0640";
-const char* password = "CP2146HD50H";
-// const char* ssid = "XC-iPH12m";
-// const char* password = "freewifi";
+const char* ssid = "";
+const char* password = "";
 
 //Your Domain name with URL path or IP address with path
 String serverName = "https://calendertrinket.onrender.com/calendars";
@@ -112,7 +110,7 @@ void setup() {
     display.println("Connecting...");
     display.display();
     delay(500);
-    //Serial.print(".");
+    Serial.print(".");
   }
   display.clearDisplay();
   display.setTextSize(1);             // Normal 1:1 pixel scale
@@ -151,11 +149,11 @@ void loop() {
     sscanf(gCalData[x]["end"].as<String>().c_str(), "%d:%d:%d", &endHour, &endMinute, &endSecond);
     uint32_t startTotal = startSecond + startMinute*60 + startHour*3600;
     uint32_t endTotal = endSecond + endMinute*60 + endHour*3600;
-    if(currentTotal > startTotal) {
+    if(currentTotal >= startTotal) {
       nextTaskIndex++;
     }
 
-    if(currentTotal > startTotal && currentTotal < endTotal) {
+    if(currentTotal >= startTotal && currentTotal < endTotal) {
       currentTask = gCalData[x]["summary"].as<String>();
       taskStart = gCalData[x]["start"].as<String>().substring(0, 5);
       taskEnd = gCalData[x]["end"].as<String>().substring(0, 5);
@@ -167,17 +165,26 @@ void loop() {
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(WHITE);        // Draw white text
   display.setCursor(0, 0);            // Start at top-left corner
-  display.println("------" + rtc.getTime() + "-------");
+  display.print("------");
+  display.setCursor(40, 0);
+  display.print(rtc.getTime());
+  display.setCursor(92, 0);
+  display.println("------");
   display.println();
-  display.println("> " + currentTask);
+  display.println("> " + currentTask.substring(0, 19));
   if(currentTask.equals("Nothing Scheduled")) {
     display.println();
   } else {
     display.println("  " + taskStart + " to " + taskEnd);
   }
   display.println();
-  display.println();
-  display.println(gCalData[nextTaskIndex]["summary"].as<String>());
-  display.println(gCalData[nextTaskIndex]["start"].as<String>().substring(0, 5) + " to " + gCalData[nextTaskIndex]["end"].as<String>().substring(0, 5));
+  display.println("Next task:");
+  if(gCalData[nextTaskIndex]["summary"].as<String>() == "null") {
+    display.println("All done for the day!");
+  } else {
+    display.println(gCalData[nextTaskIndex]["summary"].as<String>().substring(0, 21));
+    display.println(gCalData[nextTaskIndex]["start"].as<String>().substring(0, 5) + " to " + gCalData[nextTaskIndex]["end"].as<String>().substring(0, 5));
+  }
+  
   display.display();
 }
