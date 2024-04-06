@@ -1,12 +1,4 @@
 #include <Arduino.h>
-/*********
-  Complete project details at https://randomnerdtutorials.com
-  
-  This is an example for our Monochrome OLEDs based on SSD1306 drivers. Pick one up today in the adafruit shop! ------> http://www.adafruit.com/category/63_98
-  This example is for a 128x32 pixel display using I2C to communicate 3 pins are required to interface (two I2C and one reset).
-  Adafruit invests time and resources providing this open source code, please support Adafruit and open-source hardware by purchasing products from Adafruit!
-  Written by Limor Fried/Ladyada for Adafruit Industries, with contributions from the open source community. BSD license, check license.txt for more information All text above, and the splash screen below must be included in any redistribution. 
-*********/
 
 #include <SPI.h>
 #include <Wire.h>
@@ -25,8 +17,9 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 #include <HTTPClient.h>
 HTTPClient http;
 
-const char* ssid = "";
-const char* password = "";
+// honestly bruh who gives a fuck
+const char* ssid = "evan";
+const char* password = "12345678";
 
 //Your Domain name with URL path or IP address with path
 String serverName = "https://calendertrinket.onrender.com/calendars";
@@ -104,6 +97,8 @@ void setup() {
   WiFi.begin(ssid, password);
   while(WiFi.status() != WL_CONNECTED) {
     display.clearDisplay();
+    display.setRotation(2);
+
     display.setTextSize(1);             // Normal 1:1 pixel scale
     display.setTextColor(WHITE);        // Draw white text
     display.setCursor(0, 0);            // Start at top-left corner
@@ -113,6 +108,8 @@ void setup() {
     Serial.print(".");
   }
   display.clearDisplay();
+  display.setRotation(2);
+
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(WHITE);        // Draw white text
   display.setCursor(0, 0);            // Start at top-left corner
@@ -162,6 +159,8 @@ void loop() {
   }
 
   display.clearDisplay();
+  display.setRotation(2);
+
   display.setTextSize(1);             // Normal 1:1 pixel scale
   display.setTextColor(WHITE);        // Draw white text
   display.setCursor(0, 0);            // Start at top-left corner
@@ -185,6 +184,6 @@ void loop() {
     display.println(gCalData[nextTaskIndex]["summary"].as<String>().substring(0, 21));
     display.println(gCalData[nextTaskIndex]["start"].as<String>().substring(0, 5) + " to " + gCalData[nextTaskIndex]["end"].as<String>().substring(0, 5));
   }
-  
+
   display.display();
 }
